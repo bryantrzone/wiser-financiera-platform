@@ -1,0 +1,309 @@
+/* ============================================================
+   Wiser Financiera — Estilos globales
+   ============================================================ */
+
+:root {
+    --accent: #1f2937;
+    --accent-dark: #1f2937;
+    --accent-light: #eff6ff;
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #1f2937;
+    --sidebar-border: #e5e7eb;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Componentes de formulario ── */
+.wf-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.375rem;
+}
+
+.wf-input,
+.wf-select {
+    width: 100%;
+    padding: 0.6875rem 0.875rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    color: #111827;
+    background: #ffffff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+}
+
+.wf-input::placeholder {
+    color: #9ca3af;
+}
+
+.wf-input:focus,
+.wf-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+
+.wf-input:disabled,
+.wf-select:disabled {
+    background: #f9fafb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* ── Variables de marca — tema claro ── */
+:root {
+    --brand-sidebar-bg: #ffffff;
+    --brand-sidebar-text: #374151;
+    --brand-sidebar-border: #e5e7eb;
+    --brand-sidebar-section-bg: #f9fafb;
+    --brand-nav-hover-bg: #f3f4f6;
+    --brand-nav-active-bg: #eff6ff;
+    --brand-nav-active-border: #4A90E2;
+    --brand-nav-active-text: #2563eb;
+    --brand-avatar-bg: #4A90E2;
+}
+
+/* ── Clases brand-* (espejo del proyecto respaldo, tema claro) ── */
+.brand-sidebar {
+    background: var(--brand-sidebar-bg);
+    color: var(--brand-sidebar-text);
+    border-right: 1px solid var(--brand-sidebar-border);
+}
+
+.brand-sidebar-section {
+    background: var(--brand-sidebar-section-bg);
+    border-color: var(--brand-sidebar-border);
+}
+
+.brand-user-section {
+    background: var(--brand-sidebar-section-bg);
+}
+
+.brand-nav-item:hover {
+    background: var(--brand-nav-hover-bg);
+}
+
+.brand-nav-active {
+    background: var(--brand-nav-active-bg) !important;
+    border-left: 3px solid var(--brand-nav-active-border);
+}
+
+.brand-title-active {
+    color: var(--brand-nav-active-text) !important;
+    font-weight: 600;
+}
+
+.brand-sub-active {
+    color: #93c5fd;
+    /* blue-300 */
+}
+
+.brand-icon-accent {
+    color: var(--accent);
+}
+
+.brand-avatar {
+    background: var(--brand-avatar-bg);
+    color: #ffffff;
+}
+
+.brand-logo-fallback {
+    display: none;
+}
+
+/* ── Header fijo ── */
+.app-header {
+    height: 64px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* ── Spinner ── */
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+.spinner-dark {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(74, 144, 226, 0.25);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ── Wizard — pasos ── */
+.step-circle.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+}
+
+.step-circle.done {
+    background: #10b981;
+    border-color: #10b981;
+    color: #ffffff;
+}
+
+.step-label.active {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.step-label.done {
+    color: #10b981;
+}
+
+/* ── Tipo de financiamiento ── */
+.tipo-fin-option input:checked+.tipo-fin-card {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent-dark);
+}
+
+/* ── Badge de rol ── */
+.badge-rol {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.badge-admin {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.badge-vendor {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.badge-client {
+    background: #faf5ff;
+    color: #7c3aed;
+}
+
+/* ── Badge estado ── */
+.badge-borrador {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.badge-enviada {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.badge-aceptada {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.badge-rechazada {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.badge-vencida {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+/* ── Tabla ── */
+.tabla-fila {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.1s;
+}
+
+.tabla-fila:hover {
+    background: #fafafa;
+}
+
+.tabla-fila:last-child {
+    border-bottom: none;
+}
+
+/* ── Resumen wizard ── */
+.resumen-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.25rem 0;
+    border-bottom: 1px dashed #e5e7eb;
+}
+
+.resumen-row:last-child {
+    border-bottom: none;
+}
+
+.resumen-row dt {
+    color: #6b7280;
+    font-size: 0.8rem;
+}
+
+.resumen-row dd {
+    color: #111827;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* ── Animaciones ── */
+.fade-in {
+    animation: fadeIn 0.3s ease both;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}

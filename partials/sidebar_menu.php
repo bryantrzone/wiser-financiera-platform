@@ -112,22 +112,6 @@ function navSubClasses(bool $activo): string
                         </div>
                     </button>
 
-                <!-- Clientes -->
-                <button id="menu-clientes"
-                        class="w-full flex items-center space-x-3 p-3 rounded-lg brand-nav-item
-                               <?= navItemClasses($currentPage === 'clientes') ?> transition-colors">
-                    <i data-lucide="users" class="w-5 h-5 text-violet-400" aria-hidden="true"></i>
-                    <div class="text-left">
-                        <div class="font-medium <?= $currentPage === 'clientes' ? 'brand-title-active' : '' ?>"
-                             style="<?= $currentPage !== 'clientes' ? 'color:var(--brand-sidebar-text)' : '' ?>">
-                            Clientes
-                        </div>
-                        <div class="text-xs <?= navSubClasses($currentPage === 'clientes') ?>">
-                            Gestión de clientes
-                        </div>
-                    </div>
-                </button>
-
                 <?php endif; ?>
 
                 <?php if ($isAdmin): ?>
@@ -179,46 +163,22 @@ function navSubClasses(bool $activo): string
 </div>
 
 <script>
-(function () {
-    const panel    = document.getElementById('contenido-menu');
-    const wrapper  = document.getElementById('panel-menu');
-    const overlay  = document.getElementById('superposicion-menu');
-    const btnOpen  = document.getElementById('abrir-menu');
-    const btnClose = document.getElementById('cerrar-menu');
+    (function () {
+        const panel = document.getElementById('contenido-menu');
+        const wrapper = document.getElementById('panel-menu');
+        const overlay = document.getElementById('superposicion-menu');
+        const btnOpen = document.getElementById('abrir-menu');
+        const btnClose = document.getElementById('cerrar-menu');
 
-    function openMenu() {
-        wrapper.classList.remove('hidden');
-        requestAnimationFrame(() => panel.classList.remove('-translate-x-full'));
-        document.body.style.overflow = 'hidden';
-    }
-    function closeMenu() {
-        panel.classList.add('-translate-x-full');
-        document.body.style.overflow = '';
-        panel.addEventListener('transitionend', () => wrapper.classList.add('hidden'), { once: true });
-    }
-
-    btnOpen?.addEventListener('click', openMenu);
-    btnClose?.addEventListener('click', closeMenu);
-    overlay?.addEventListener('click', closeMenu);
-
-    document.getElementById('menu-nueva-cotizacion')?.addEventListener('click', () => {
-        window.location.href = '/wiser-financiera-project/index.php';
-    });
-    document.getElementById('menu-cotizaciones')?.addEventListener('click', () => {
-        window.location.href = '/wiser-financiera-project/cotizaciones.php';
-    });
-    document.getElementById('menu-clientes')?.addEventListener('click', () => {
-        window.location.href = '/wiser-financiera-project/clientes.php';
-    });
-    document.getElementById('menu-usuarios')?.addEventListener('click', () => {
-        window.location.href = '/wiser-financiera-project/usuarios.php';
-    });
-    document.getElementById('menu-catalogos')?.addEventListener('click', () => {
-        window.location.href = '/wiser-financiera-project/catalogos.php';
-    });
-    document.getElementById('menu-logout')?.addEventListener('click', () => {
-        if (confirm('¿Deseas cerrar sesión?')) {
-            window.location.href = '/wiser-financiera-project/logout.php';
+        function openMenu() {
+            wrapper.classList.remove('hidden');
+            requestAnimationFrame(() => panel.classList.remove('-translate-x-full'));
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMenu() {
+            panel.classList.add('-translate-x-full');
+            document.body.style.overflow = '';
+            panel.addEventListener('transitionend', () => wrapper.classList.add('hidden'), { once: true });
         }
 
         btnOpen?.addEventListener('click', openMenu);

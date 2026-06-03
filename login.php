@@ -127,14 +127,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Logo -->
         <div class="text-center mb-8 fade-up">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white card-shadow mb-4">
-                <img src="/wiser-financiera-project/assets/img/logo-wiser-website.svg" alt="<?= APP_NAME ?>"
-                    class="w-10 h-10 object-contain"
-                    onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                <span class="hidden font-bold text-accent text-2xl">W</span>
-            </div>
-            <h1 class="text-2xl font-bold text-gray-900"><?= APP_NAME ?></h1>
-            <p class="text-gray-500 text-sm mt-1">Plataforma de cotización financiera</p>
+            <img src="/assets/img/logo-website-transparente.png" alt="<?= APP_NAME ?>"
+                class="h-20 w-auto object-contain mx-auto">
         </div>
 
         <!-- Formulario de Login -->

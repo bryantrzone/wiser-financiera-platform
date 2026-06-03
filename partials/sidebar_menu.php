@@ -99,6 +99,22 @@ function navSubClasses(bool $activo): string {
                     </div>
                 </button>
 
+                <!-- Clientes -->
+                <button id="menu-clientes"
+                        class="w-full flex items-center space-x-3 p-3 rounded-lg brand-nav-item
+                               <?= navItemClasses($currentPage === 'clientes') ?> transition-colors">
+                    <i data-lucide="users" class="w-5 h-5 text-violet-400" aria-hidden="true"></i>
+                    <div class="text-left">
+                        <div class="font-medium <?= $currentPage === 'clientes' ? 'brand-title-active' : '' ?>"
+                             style="<?= $currentPage !== 'clientes' ? 'color:var(--brand-sidebar-text)' : '' ?>">
+                            Clientes
+                        </div>
+                        <div class="text-xs <?= navSubClasses($currentPage === 'clientes') ?>">
+                            Gestión de clientes
+                        </div>
+                    </div>
+                </button>
+
                 <?php endif; ?>
 
                 <?php if ($isAdmin): ?>
@@ -180,6 +196,9 @@ function navSubClasses(bool $activo): string {
     });
     document.getElementById('menu-cotizaciones')?.addEventListener('click', () => {
         window.location.href = '/wiser-financiera-project/cotizaciones.php';
+    });
+    document.getElementById('menu-clientes')?.addEventListener('click', () => {
+        window.location.href = '/wiser-financiera-project/clientes.php';
     });
     document.getElementById('menu-usuarios')?.addEventListener('click', () => {
         window.location.href = '/wiser-financiera-project/usuarios.php';

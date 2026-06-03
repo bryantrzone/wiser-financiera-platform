@@ -32,4 +32,4 @@
 
 <!-- CSS de la aplicación -->
 <link rel="stylesheet"
-    href="/wiser-financiera-project/assets/css/app.css?v=<?= filemtime(__DIR__ . '/../assets/css/app.css') ?>">
+    href="/assets/css/app.css?v=<?= filemtime(__DIR__ . '/../assets/css/app.css') ?>">

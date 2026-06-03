@@ -1,0 +1,2 @@
+ALTER TABLE `productos`
+    ADD COLUMN `reca` VARCHAR(120) DEFAULT NULL AFTER `activo`;

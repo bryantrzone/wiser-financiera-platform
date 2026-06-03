@@ -16,8 +16,8 @@ $userInitial = strtoupper(substr($user['full_name'] ?? 'U', 0, 1));
                 onmouseout="this.style.background='transparent'" aria-label="Abrir menú">
                 <i data-lucide="menu" class="w-5 h-5"></i>
             </button>
-            <a href="/wiser-financiera-project/index.php" class="flex items-center">
-                <img src="/wiser-financiera-project/assets/img/logo-wiser-website.svg" alt="<?= APP_NAME ?>"
+            <a href="/index.php" class="flex items-center">
+                <img src="/assets/img/logo-wiser-website.svg" alt="<?= APP_NAME ?>"
                     class="h-12 w-auto"
                     onerror="this.style.display='none';this.nextElementSibling.style.display='inline';">
                 <span class="hidden font-bold text-white text-lg">Wiser Financiera</span>

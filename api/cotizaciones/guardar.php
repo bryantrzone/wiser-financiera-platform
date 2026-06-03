@@ -1,100 +1,146 @@
 <?php
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/amortizacion.php';
 
 $user = requireLoginApi();
 verificarMetodoHttp('POST');
 
-$raw  = file_get_contents('php://input');
-$data = json_decode($raw, true);
-
+$data = json_decode(file_get_contents('php://input'), true);
 if (!$data) {
     enviarRespuestaJson('error', 'Datos inválidos', null, 400);
 }
 
-$faltantes = validarCamposRequeridos($data, ['costo_unitario', 'plazo_meses', 'cliente_nombre']);
+$faltantes = validarCamposRequeridos($data, [
+    'cliente_id', 'monto_credito', 'plazo_meses', 'fecha_inicio', 'producto_id'
+]);
 if ($faltantes) {
     enviarRespuestaJson('error', 'Campos requeridos: ' . implode(', ', $faltantes), null, 422);
 }
 
+$tasa_anual_pct = isset($data['tasa_anual_pct']) ? (float) $data['tasa_anual_pct'] : null;
+if ($tasa_anual_pct === null || $tasa_anual_pct < 3 || $tasa_anual_pct > 60) {
+    enviarRespuestaJson('error', 'La tasa debe estar entre 3% y 60%', null, 422);
+}
+
+$monto           = (float) $data['monto_credito'];
+$plazo           = (int)   $data['plazo_meses'];
+$fecha           = $data['fecha_inicio'];
+$producto_id     = (int)   $data['producto_id'];
+$cliente_id      = (int)   $data['cliente_id'];
+$tasa_anual_dec  = $tasa_anual_pct / 100;
+$tasa_mensual_dec = $tasa_anual_dec / 12;
+
+$gastos_contrato = 0;
+if (!empty($data['gastos_contrato_activo']) && (int) $data['gastos_contrato_activo'] === 1) {
+    $gastos_contrato = min((float) ($data['gastos_contrato_monto'] ?? 0), 15000.00);
+    $gastos_contrato = max(0, $gastos_contrato);
+}
+
 try {
-    $conn  = obtenerConexionBaseDatos();
-    $folio = generarFolioUnico();
+    $conn = obtenerConexionBaseDatos();
+
+    $stmt2 = $conn->prepare("SELECT comision_apertura FROM productos WHERE id = ? AND activo = 1");
+    $stmt2->execute([$producto_id]);
+    $producto = $stmt2->fetch();
+    $comision_pct = (float) ($producto['comision_apertura'] ?? 0);
+
+    $comision_monto   = $comision_pct > 0 ? round($monto * $comision_pct, 2) : 0;
+    $monto_financiado = $monto - $comision_monto - $gastos_contrato;
+
+    $params = [
+        'monto_credito'         => $monto_financiado,
+        'plazo_meses'           => $plazo,
+        'fecha_inicio'          => $fecha,
+        'tasa_anual'            => $tasa_anual_dec,
+        'comision_apertura_pct' => 0,
+    ];
+
+    $pago_mensual = CalculadoraAmortizacion::calcularPMT($tasa_mensual_dec, $plazo, $monto_financiado);
+    $periodos     = CalculadoraAmortizacion::generarPeriodos($params);
+    $totales      = CalculadoraAmortizacion::calcularTotales($periodos);
+
+    $fecha_dt = new DateTime($fecha);
+    $fecha_dt->modify('+' . $plazo * 30 . ' days');
+    $fecha_limite = $fecha_dt->format('Y-m-d');
 
     $conn->beginTransaction();
 
-    // Header
-    $stmtH = $conn->prepare("
-        INSERT INTO cotizacion_header
-            (folio, user_id, estado, tipo_financiamiento,
-             cliente_nombre, cliente_empresa, cliente_rfc, cliente_email, cliente_telefono,
-             moneda, tipo_cambio, notas, fecha_vencimiento)
+    $credito_no = CalculadoraAmortizacion::generarCreditoNo($conn);
+
+    $stmtC = $conn->prepare("
+        INSERT INTO cotizaciones
+            (credito_no, cliente_id, user_id, fecha_inicio, monto_credito, gastos_contrato,
+             plazo_meses, plazo_dias, tasa_id, tasa_anual_custom, producto_id, moneda,
+             pago_mensual, total_intereses, total_a_pagar, fecha_limite_pago)
         VALUES
-            (:folio, :user_id, 'borrador', :tipo_fin,
-             :nom, :emp, :rfc, :email, :tel,
-             :moneda, :tc, :notas, :fv)
+            (:cn, :cli, :uid, :fi, :monto, :gc,
+             :plazo, :dias, NULL, :tac, :pid, 'Pesos Mexicanos',
+             :pm, :ti, :tp, :fl)
     ");
-    $stmtH->execute([
-        ':folio'   => $folio,
-        ':user_id' => $user['id'],
-        ':tipo_fin'=> sanitizarEntrada($data['tipo_financiamiento'] ?? 'arrendamiento_financiero'),
-        ':nom'     => sanitizarEntrada($data['cliente_nombre']   ?? ''),
-        ':emp'     => sanitizarEntrada($data['cliente_empresa']  ?? ''),
-        ':rfc'     => sanitizarEntrada($data['cliente_rfc']      ?? ''),
-        ':email'   => sanitizarEntrada($data['cliente_email']    ?? ''),
-        ':tel'     => sanitizarEntrada($data['cliente_telefono'] ?? ''),
-        ':moneda'  => sanitizarEntrada($data['moneda']           ?? 'MXN'),
-        ':tc'      => (float)($data['tipo_cambio'] ?? 1),
-        ':notas'   => sanitizarEntrada($data['notas']            ?? ''),
-        ':fv'      => !empty($data['fecha_vencimiento']) ? $data['fecha_vencimiento'] : null,
+    $stmtC->execute([
+        ':cn'    => $credito_no,
+        ':cli'   => $cliente_id,
+        ':uid'   => $user['id'],
+        ':fi'    => $fecha,
+        ':monto' => $monto,
+        ':gc'    => $gastos_contrato,
+        ':plazo' => $plazo,
+        ':dias'  => $plazo * 30,
+        ':tac'   => $tasa_anual_dec,
+        ':pid'   => $producto_id,
+        ':pm'    => $pago_mensual,
+        ':ti'    => $totales['total_intereses'],
+        ':tp'    => $totales['total_a_pagar'],
+        ':fl'    => $fecha_limite,
     ]);
 
-    $cotizacionId = (int) $conn->lastInsertId();
+    $cotizacion_id = (int) $conn->lastInsertId();
 
-    // Detail
-    $stmtD = $conn->prepare("
-        INSERT INTO cotizacion_detail
-            (cotizacion_id, tipo_equipo, marca, modelo, descripcion,
-             cantidad, costo_unitario, anticipo_pct, anticipo_monto,
-             plazo_meses, tasa_anual, residual_pct, residual_monto,
-             seguro_pct, pago_seguro, pago_equipo, subtotal_mensual, iva_mensual, pago_mensual)
+    $stmtP = $conn->prepare("
+        INSERT INTO cotizacion_periodos
+            (cotizacion_id, periodo, fecha_inicio_mes, fecha_vencimiento, fecha_corte,
+             dias, saldo_insoluto, pago_capital, interes_ordinario, iva_interes,
+             importe_comision, excedente_pagado, pago_anticipado, pago_calculado, pago_integrado)
         VALUES
-            (:cid, :te, :marca, :modelo, :desc,
-             :cant, :costo, :ant_pct, :ant_monto,
-             :plazo, :tasa, :res_pct, :res_monto,
-             :seg_pct, :seg_pago, :pago_eq, :sub, :iva, :pm)
+            (:cid, :per, :fim, :fv, :fc,
+             :dias, :si, :pc, :io, :iv,
+             :ic, :ep, :pa, :pcalc, :pint)
     ");
-    $stmtD->execute([
-        ':cid'      => $cotizacionId,
-        ':te'       => sanitizarEntrada($data['tipo_equipo']  ?? ''),
-        ':marca'    => sanitizarEntrada($data['marca']        ?? ''),
-        ':modelo'   => sanitizarEntrada($data['modelo']       ?? ''),
-        ':desc'     => sanitizarEntrada($data['descripcion']  ?? ''),
-        ':cant'     => (int)($data['cantidad']        ?? 1),
-        ':costo'    => (float)($data['costo_unitario'] ?? 0),
-        ':ant_pct'  => (float)($data['anticipo_pct']  ?? 0),
-        ':ant_monto'=> (float)($data['anticipo_monto'] ?? 0),
-        ':plazo'    => (int)($data['plazo_meses']     ?? 24),
-        ':tasa'     => (float)($data['tasa_anual']    ?? 0),
-        ':res_pct'  => (float)($data['residual_pct']  ?? 20),
-        ':res_monto'=> (float)($data['residual_monto'] ?? 0),
-        ':seg_pct'  => (float)($data['seguro_pct']    ?? 0),
-        ':seg_pago' => (float)($data['pago_seguro']   ?? 0),
-        ':pago_eq'  => (float)($data['pago_equipo']   ?? 0),
-        ':sub'      => (float)($data['subtotal']      ?? 0),
-        ':iva'      => (float)($data['iva']            ?? 0),
-        ':pm'       => (float)($data['pago_mensual']  ?? 0),
-    ]);
+
+    foreach ($periodos as $p) {
+        $stmtP->execute([
+            ':cid'   => $cotizacion_id,
+            ':per'   => $p['periodo'],
+            ':fim'   => $p['fecha_inicio_mes'],
+            ':fv'    => $p['fecha_vencimiento'],
+            ':fc'    => $p['fecha_corte'],
+            ':dias'  => $p['dias'],
+            ':si'    => $p['saldo_insoluto'],
+            ':pc'    => $p['pago_capital'],
+            ':io'    => $p['interes_ordinario'],
+            ':iv'    => $p['iva_interes'],
+            ':ic'    => $p['importe_comision'],
+            ':ep'    => $p['excedente_pagado'],
+            ':pa'    => $p['pago_anticipado'],
+            ':pcalc' => $p['pago_calculado'],
+            ':pint'  => $p['pago_integrado'],
+        ]);
+    }
 
     $conn->commit();
 
     enviarRespuestaJson('success', 'Cotización guardada correctamente', [
-        'id'    => $cotizacionId,
-        'folio' => $folio,
+        'cotizacion_id' => $cotizacion_id,
+        'credito_no'    => $credito_no,
     ]);
 
 } catch (Exception $e) {
-    $conn->rollBack();
+    if (isset($conn) && $conn->inTransaction()) {
+        $conn->rollBack();
+    }
     error_log('Error guardando cotización: ' . $e->getMessage());
-    enviarRespuestaJson('error', 'Error al guardar la cotización', null, 500);
+    enviarRespuestaJson('error', 'Error al guardar: ' . $e->getMessage(), null, 500);
 }

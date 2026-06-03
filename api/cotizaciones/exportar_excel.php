@@ -28,13 +28,12 @@ try {
 
     $stmt = $conn->prepare("
         SELECT c.*, cl.nombre AS cliente_nombre, cl.empresa, cl.rfc,
-               COALESCE(t.descripcion, 'Tasa manual') AS tasa_desc,
-               COALESCE(t.tasa_anual, c.tasa_anual_custom) AS tasa_anual,
+               t.descripcion AS tasa_desc, t.tasa_anual,
                p.nombre AS producto_nombre
         FROM cotizaciones c
-        JOIN clientes cl      ON cl.id = c.cliente_id
-        LEFT JOIN tasas t     ON t.id  = c.tasa_id
-        LEFT JOIN productos p ON p.id  = c.producto_id
+        JOIN clientes cl ON cl.id = c.cliente_id
+        JOIN tasas t     ON t.id  = c.tasa_id
+        JOIN productos p ON p.id  = c.producto_id
         WHERE c.id = ?
     ");
     $stmt->execute([$id]);
@@ -59,9 +58,7 @@ $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 $sheet->setTitle('Amortización');
 
-$tasaPct        = round((float)$cot['tasa_anual'] * 100, 0);
-$gastosContrato = (float)($cot['gastos_contrato'] ?? 0);
-$montoFinanciado = (float)$cot['monto_credito'] - $gastosContrato;
+$tasaPct = round((float)$cot['tasa_anual'] * 100, 0);
 
 // Cabecera de datos
 $infoRows = [
@@ -77,10 +74,6 @@ $infoRows = [
     ['',                   '',                      '',                          'Total Intereses:', (float)$cot['total_intereses']],
     ['',                   '',                      '',                          'Total a Pagar:', (float)$cot['total_a_pagar']],
 ];
-
-if ($gastosContrato > 0) {
-    $infoRows[] = ['Gastos por Contrato:', $gastosContrato, '', 'Monto Financiado:', $montoFinanciado];
-}
 
 $sheet->mergeCells('A1:K1');
 $sheet->setCellValue('A1', 'Tabla de Amortización — ' . $cot['credito_no']);

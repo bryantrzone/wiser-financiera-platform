@@ -15,25 +15,16 @@ class CalculadoraAmortizacion
 
     public static function generarPeriodos(array $p): array
     {
-        $monto        = (float) $p['monto_credito'];
-        $plazo        = (int)   $p['plazo_meses'];
-        $tasa_anual   = (float) $p['tasa_anual'];
+        $monto       = (float) $p['monto_credito'];
+        $plazo       = (int)   $p['plazo_meses'];
+        $tasa_anual  = (float) $p['tasa_anual'];
         $fecha_inicio = new DateTime($p['fecha_inicio']);
-        $comision_pct = (float) ($p['comision_apertura_pct'] ?? 0);
-        $tasa_iva     = isset($p['aplicar_iva']) && (int) $p['aplicar_iva'] === 0 ? 0.0 : self::IVA;
 
         $tasa_mensual = $tasa_anual / 12;
+        $pago_mensual = self::calcularPMT($tasa_mensual, $plazo, $monto);
 
-        // La comisión se deduce del saldo: el cliente recibe monto - comisión pero debe el monto completo
-        $comision_monto   = $comision_pct > 0
-            ? round($monto * $comision_pct, 6)
-            : 0;
-        $monto_financiado = $monto - $comision_monto;
-
-        $pago_mensual = self::calcularPMT($tasa_mensual, $plazo, $monto_financiado);
-
-        $periodos                 = [];
-        $saldo                    = $monto_financiado;
+        $periodos           = [];
+        $saldo              = $monto;
         $pago_anticipado_anterior = 0;
 
         for ($i = 1; $i <= $plazo; $i++) {
@@ -47,7 +38,7 @@ class CalculadoraAmortizacion
             $fecha_inicio_mes  = (clone $fecha_corte)->modify('first day of this month');
 
             $interes_ordinario = round($saldo * $tasa_mensual, 6);
-            $iva_interes       = round($interes_ordinario * $tasa_iva, 6);
+            $iva_interes       = round($interes_ordinario * self::IVA, 6);
 
             $es_ultimo = $saldo + $interes_ordinario <= $pago_mensual + 0.01;
 
@@ -92,20 +83,17 @@ class CalculadoraAmortizacion
     {
         $total_intereses = 0;
         $total_iva       = 0;
-        $total_comision  = 0;
         $total_a_pagar   = 0;
 
         foreach ($periodos as $p) {
             $total_intereses += $p['interes_ordinario'];
             $total_iva       += $p['iva_interes'];
-            $total_comision  += $p['importe_comision'];
-            $total_a_pagar   += $p['pago_calculado'];
+            $total_a_pagar   += $p['pago_capital'] + $p['interes_ordinario'] + $p['iva_interes'];
         }
 
         return [
             'total_intereses' => round($total_intereses, 6),
             'total_iva'       => round($total_iva, 6),
-            'total_comision'  => round($total_comision, 6),
             'total_a_pagar'   => round($total_a_pagar, 6),
         ];
     }

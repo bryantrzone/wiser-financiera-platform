@@ -12,7 +12,7 @@ requireLoginApi();
 $body = json_decode(file_get_contents('php://input'), true) ?? [];
 $data = array_merge($_GET, $_POST, $body);
 
-$required = ['monto_credito', 'plazo_meses', 'fecha_inicio'];
+$required = ['monto_credito', 'plazo_meses', 'fecha_inicio', 'tasa_id'];
 $faltantes = validarCamposRequeridos($data, $required);
 if ($faltantes) {
     http_response_code(422);
@@ -20,16 +20,10 @@ if ($faltantes) {
     exit;
 }
 
-$monto           = (float) $data['monto_credito'];
-$plazo           = (int)   $data['plazo_meses'];
-$fecha           = $data['fecha_inicio'];
-$tasa_anual_pct  = isset($data['tasa_anual_pct']) ? (float) $data['tasa_anual_pct'] : null;
-
-$gastos_contrato = 0;
-if (!empty($data['gastos_contrato_activo']) && (int) $data['gastos_contrato_activo'] === 1) {
-    $gastos_contrato = min((float) ($data['gastos_contrato_monto'] ?? 0), 15000.00);
-    $gastos_contrato = max(0, $gastos_contrato);
-}
+$monto      = (float) $data['monto_credito'];
+$plazo      = (int)   $data['plazo_meses'];
+$fecha      = $data['fecha_inicio'];
+$tasa_id    = (int)   $data['tasa_id'];
 
 if ($monto <= 0 || $plazo <= 0) {
     http_response_code(422);
@@ -37,71 +31,55 @@ if ($monto <= 0 || $plazo <= 0) {
     exit;
 }
 
-if ($tasa_anual_pct === null || $tasa_anual_pct < 3 || $tasa_anual_pct > 60) {
-    http_response_code(422);
-    echo json_encode(['status' => 'error', 'message' => 'La tasa debe estar entre 3% y 60%']);
-    exit;
-}
-
-$tasa_anual_dec  = $tasa_anual_pct / 100;
-$tasa_mensual_dec = $tasa_anual_dec / 12;
-$tasa_desc       = round($tasa_anual_pct, 2) . '% anual';
-
 try {
     $conn = obtenerConexionBaseDatos();
 
+    $stmt = $conn->prepare("SELECT * FROM tasas WHERE id = ? AND activo = 1");
+    $stmt->execute([$tasa_id]);
+    $tasa = $stmt->fetch();
+
+    if (!$tasa) {
+        http_response_code(404);
+        echo json_encode(['status' => 'error', 'message' => 'Tasa no encontrada']);
+        exit;
+    }
+
     $producto = null;
-    $comision_pct = 0;
     if (!empty($data['producto_id'])) {
         $stmt2 = $conn->prepare("SELECT * FROM productos WHERE id = ? AND activo = 1");
         $stmt2->execute([(int)$data['producto_id']]);
         $producto = $stmt2->fetch();
-        if ($producto) {
-            $comision_pct = (float) ($producto['comision_apertura'] ?? 0);
-        }
     }
 
-    $comision_monto   = $comision_pct > 0 ? round($monto * $comision_pct, 2) : 0;
-    $monto_financiado = $monto - $comision_monto - $gastos_contrato;
-
     $params = [
-        'monto_credito'         => $monto_financiado,
-        'plazo_meses'           => $plazo,
-        'fecha_inicio'          => $fecha,
-        'tasa_anual'            => $tasa_anual_dec,
-        'comision_apertura_pct' => 0,
-        'aplicar_iva'           => isset($data['aplicar_iva']) ? (int) $data['aplicar_iva'] : 1,
+        'monto_credito' => $monto,
+        'plazo_meses'   => $plazo,
+        'fecha_inicio'  => $fecha,
+        'tasa_anual'    => (float) $tasa['tasa_anual'],
     ];
 
-    $pago_mensual = CalculadoraAmortizacion::calcularPMT($tasa_mensual_dec, $plazo, $monto_financiado);
+    $pago_mensual = CalculadoraAmortizacion::calcularPMT((float)$tasa['tasa_anual'] / 12, $plazo, $monto);
     $periodos     = CalculadoraAmortizacion::generarPeriodos($params);
     $totales      = CalculadoraAmortizacion::calcularTotales($periodos);
 
     $fecha_dt        = new DateTime($fecha);
-    $fecha_limite_dt = clone $fecha_dt;
-    $fecha_limite_dt->modify('+' . ($plazo * 30) . ' days');
+    $fecha_limite_dt = (clone $fecha_dt)->modify('+' . ($plazo * 30) . ' days');
 
     $cabecera = [
-        'plazo_dias'        => $plazo * 30,
-        'plazo_meses'       => $plazo,
-        'fecha_inicio'      => $fecha_dt->format('d/m/Y'),
-        'fecha_limite'      => $fecha_limite_dt->format('d/m/Y'),
-        'monto_credito'     => $monto,
-        'monto_financiado'  => $monto_financiado,
-        'comision_monto'    => $comision_monto,
-        'gastos_contrato'   => $gastos_contrato,
-        'tasa_anual'        => $tasa_anual_dec,
-        'tasa_pct'          => round($tasa_anual_pct, 2) . '%',
-        'tasa_mensual'      => $tasa_mensual_dec,
-        'tasa_descripcion'  => $tasa_desc,
-        'producto'          => $producto ? $producto['nombre'] : 'N/A',
-        'moneda'            => 'Pesos Mexicanos',
-        'pago_mensual'      => $pago_mensual,
-        'total_intereses'   => $totales['total_intereses'],
-        'total_comision'    => $totales['total_comision'],
-        'total_a_pagar'     => $totales['total_a_pagar'],
-        'comision_pct'      => $comision_pct,
-        'comision_pct_fmt'  => $comision_pct > 0 ? round($comision_pct * 100, 2) . '%' : 'Sin comisión',
+        'plazo_dias'       => $plazo * 30,
+        'plazo_meses'      => $plazo,
+        'fecha_inicio'     => $fecha_dt->format('d/m/Y'),
+        'fecha_limite'     => $fecha_limite_dt->format('d/m/Y'),
+        'monto_credito'    => $monto,
+        'tasa_anual'       => (float) $tasa['tasa_anual'],
+        'tasa_pct'         => round((float)$tasa['tasa_anual'] * 100, 0) . '%',
+        'tasa_mensual'     => (float) $tasa['tasa_mensual'],
+        'tasa_descripcion' => $tasa['descripcion'],
+        'producto'         => $producto ? $producto['nombre'] : 'N/A',
+        'moneda'           => 'Pesos Mexicanos',
+        'pago_mensual'     => $pago_mensual,
+        'total_intereses'  => $totales['total_intereses'],
+        'total_a_pagar'    => $totales['total_a_pagar'],
     ];
 
     echo json_encode([

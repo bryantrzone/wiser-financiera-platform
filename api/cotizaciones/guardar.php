@@ -14,57 +14,41 @@ if (!$data) {
 }
 
 $faltantes = validarCamposRequeridos($data, [
-    'cliente_id', 'monto_credito', 'plazo_meses', 'fecha_inicio', 'producto_id'
+    'cliente_id', 'monto_credito', 'plazo_meses', 'fecha_inicio', 'tasa_id', 'producto_id'
 ]);
 if ($faltantes) {
     enviarRespuestaJson('error', 'Campos requeridos: ' . implode(', ', $faltantes), null, 422);
 }
 
-$tasa_anual_pct = isset($data['tasa_anual_pct']) ? (float) $data['tasa_anual_pct'] : null;
-if ($tasa_anual_pct === null || $tasa_anual_pct < 3 || $tasa_anual_pct > 60) {
-    enviarRespuestaJson('error', 'La tasa debe estar entre 3% y 60%', null, 422);
-}
-
-$monto           = (float) $data['monto_credito'];
-$plazo           = (int)   $data['plazo_meses'];
-$fecha           = $data['fecha_inicio'];
-$producto_id     = (int)   $data['producto_id'];
-$cliente_id      = (int)   $data['cliente_id'];
-$tasa_anual_dec  = $tasa_anual_pct / 100;
-$tasa_mensual_dec = $tasa_anual_dec / 12;
-
-$gastos_contrato = 0;
-if (!empty($data['gastos_contrato_activo']) && (int) $data['gastos_contrato_activo'] === 1) {
-    $gastos_contrato = min((float) ($data['gastos_contrato_monto'] ?? 0), 15000.00);
-    $gastos_contrato = max(0, $gastos_contrato);
-}
+$monto      = (float) $data['monto_credito'];
+$plazo      = (int)   $data['plazo_meses'];
+$fecha      = $data['fecha_inicio'];
+$tasa_id    = (int)   $data['tasa_id'];
+$producto_id = (int)  $data['producto_id'];
+$cliente_id = (int)   $data['cliente_id'];
 
 try {
     $conn = obtenerConexionBaseDatos();
 
-    $stmt2 = $conn->prepare("SELECT comision_apertura FROM productos WHERE id = ? AND activo = 1");
-    $stmt2->execute([$producto_id]);
-    $producto = $stmt2->fetch();
-    $comision_pct = (float) ($producto['comision_apertura'] ?? 0);
-
-    $comision_monto   = $comision_pct > 0 ? round($monto * $comision_pct, 2) : 0;
-    $monto_financiado = $monto - $comision_monto - $gastos_contrato;
+    $stmt = $conn->prepare("SELECT * FROM tasas WHERE id = ? AND activo = 1");
+    $stmt->execute([$tasa_id]);
+    $tasa = $stmt->fetch();
+    if (!$tasa) {
+        enviarRespuestaJson('error', 'Tasa no encontrada', null, 404);
+    }
 
     $params = [
-        'monto_credito'         => $monto_financiado,
-        'plazo_meses'           => $plazo,
-        'fecha_inicio'          => $fecha,
-        'tasa_anual'            => $tasa_anual_dec,
-        'comision_apertura_pct' => 0,
+        'monto_credito' => $monto,
+        'plazo_meses'   => $plazo,
+        'fecha_inicio'  => $fecha,
+        'tasa_anual'    => (float) $tasa['tasa_anual'],
     ];
 
-    $pago_mensual = CalculadoraAmortizacion::calcularPMT($tasa_mensual_dec, $plazo, $monto_financiado);
+    $pago_mensual = CalculadoraAmortizacion::calcularPMT((float)$tasa['tasa_anual'] / 12, $plazo, $monto);
     $periodos     = CalculadoraAmortizacion::generarPeriodos($params);
     $totales      = CalculadoraAmortizacion::calcularTotales($periodos);
 
-    $fecha_dt = new DateTime($fecha);
-    $fecha_dt->modify('+' . $plazo * 30 . ' days');
-    $fecha_limite = $fecha_dt->format('Y-m-d');
+    $fecha_limite = (new DateTime($fecha))->modify('+' . ($plazo * 30) . ' days')->format('Y-m-d');
 
     $conn->beginTransaction();
 
@@ -72,13 +56,13 @@ try {
 
     $stmtC = $conn->prepare("
         INSERT INTO cotizaciones
-            (credito_no, cliente_id, user_id, fecha_inicio, monto_credito, gastos_contrato,
-             plazo_meses, plazo_dias, tasa_id, tasa_anual_custom, producto_id, moneda,
-             pago_mensual, total_intereses, total_a_pagar, fecha_limite_pago)
+            (credito_no, cliente_id, user_id, fecha_inicio, monto_credito, plazo_meses,
+             plazo_dias, tasa_id, producto_id, moneda, pago_mensual,
+             total_intereses, total_a_pagar, fecha_limite_pago)
         VALUES
-            (:cn, :cli, :uid, :fi, :monto, :gc,
-             :plazo, :dias, NULL, :tac, :pid, 'Pesos Mexicanos',
-             :pm, :ti, :tp, :fl)
+            (:cn, :cli, :uid, :fi, :monto, :plazo,
+             :dias, :tid, :pid, 'Pesos Mexicanos', :pm,
+             :ti, :tp, :fl)
     ");
     $stmtC->execute([
         ':cn'    => $credito_no,
@@ -86,10 +70,9 @@ try {
         ':uid'   => $user['id'],
         ':fi'    => $fecha,
         ':monto' => $monto,
-        ':gc'    => $gastos_contrato,
         ':plazo' => $plazo,
         ':dias'  => $plazo * 30,
-        ':tac'   => $tasa_anual_dec,
+        ':tid'   => $tasa_id,
         ':pid'   => $producto_id,
         ':pm'    => $pago_mensual,
         ':ti'    => $totales['total_intereses'],

@@ -3,7 +3,7 @@ require_once 'includes/auth.php';
 require_once 'config/constants.php';
 
 if (isLoggedIn()) {
-    header('Location: /wiser-financiera-project/index.php');
+    header('Location: /index.php');
     exit;
 }
 
@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user = authenticateUser($email, $password);
                 if ($user) {
                     createUserSession($user);
-                    header('Location: /wiser-financiera-project/index.php');
+                    header('Location: /index.php');
                     exit;
                 } else {
                     $error = 'Correo o contraseña incorrectos.';

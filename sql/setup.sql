@@ -143,4 +143,4 @@ INSERT INTO `catalogo_monedas` (`codigo`, `nombre`, `tipo_cambio`) VALUES
 -- Usuario admin por defecto (contraseña: Admin2025!)
 INSERT INTO `users` (`full_name`, `email`, `password`, `role`) VALUES
   ('Administrador', 'admin@wiserfinanciera.mx',
-   '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+   '$2y$10$zhBofQiy0s.J1llCRrxrXuQ6Vib/mz8b9ROMc5VUKCszPxwGp.lnW', 'admin');

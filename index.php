@@ -9,10 +9,10 @@ requireLogin();
 $user = [
     'id'        => $_SESSION['user_id'],
     'full_name' => $_SESSION['full_name'],
-    'email'     => $_SESSION['email'],
-    'role'      => $_SESSION['role'],
+    'email' => $_SESSION['email'],
+    'role' => $_SESSION['role'],
 ];
-$pageTitle   = 'Nueva Cotización — ' . APP_NAME;
+$pageTitle = 'Nueva Cotización — ' . APP_NAME;
 $currentPage = 'index';
 
 // Cargar catálogos para los selects
@@ -23,6 +23,7 @@ $productos = $conn->query("SELECT id, nombre FROM productos WHERE activo=1 ORDER
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <?php include 'partials/brand_head.php'; ?>
     <style>
@@ -61,6 +62,7 @@ $productos = $conn->query("SELECT id, nombre FROM productos WHERE activo=1 ORDER
         }
     </style>
 </head>
+
 <body class="bg-gray-50 min-h-screen">
 
     <?php include 'partials/app_header.php'; ?>
@@ -430,4 +432,5 @@ $productos = $conn->query("SELECT id, nombre FROM productos WHERE activo=1 ORDER
 })();
 </script>
 </body>
+
 </html>

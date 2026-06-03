@@ -111,7 +111,7 @@ const Wizard = (() => {
     // ── Cargar catálogos ───────────────────────────────────
     async function cargarCatalogos() {
         try {
-            const res  = await fetch('/wiser-financiera-project/api/catalogos/listar.php');
+            const res  = await fetch('/api/catalogos/listar.php');
             const data = await res.json();
             if (data.status !== 'success') return;
 
@@ -260,7 +260,7 @@ const Wizard = (() => {
 
         try {
             const payload = { ...estado };
-            const res     = await fetch('/wiser-financiera-project/api/cotizaciones/guardar.php', {
+            const res     = await fetch('/api/cotizaciones/guardar.php', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify(payload),
@@ -269,7 +269,7 @@ const Wizard = (() => {
 
             if (data.status === 'success') {
                 statusEl.className = 'mt-5 p-4 rounded-xl text-sm bg-green-50 border border-green-200 text-green-800 flex items-center space-x-2';
-                statusEl.innerHTML = `<svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>Cotización guardada con folio <strong>${data.data?.folio || ''}</strong>. <a href="/wiser-financiera-project/cotizaciones.php" class="underline">Ver cotizaciones →</a></span>`;
+                statusEl.innerHTML = `<svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>Cotización guardada con folio <strong>${data.data?.folio || ''}</strong>. <a href="/cotizaciones.php" class="underline">Ver cotizaciones →</a></span>`;
                 statusEl.classList.remove('hidden');
                 btn.textContent = '¡Guardado!';
                 btn.disabled    = true;

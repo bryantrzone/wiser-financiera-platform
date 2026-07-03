@@ -154,14 +154,14 @@ function _navTextCls(string $page, string $current): string
         _bind('cerrar-menu', _close);
         _bind('superposicion-menu', _close);
 
-        _nav('menu-nueva-cotizacion', '/index.php');
-        _nav('menu-mis-cotizaciones', '/cotizaciones.php');
-        _nav('menu-usuarios', '/usuarios.php');
-        _nav('menu-catalogos', '/catalogos.php');
+        _nav('menu-nueva-cotizacion', '<?= APP_BASE_PATH ?>/index.php');
+        _nav('menu-mis-cotizaciones', '<?= APP_BASE_PATH ?>/cotizaciones.php');
+        _nav('menu-usuarios', '<?= APP_BASE_PATH ?>/usuarios.php');
+        _nav('menu-catalogos', '<?= APP_BASE_PATH ?>/catalogos.php');
 
         _bind('menu-logout', function () {
             _close();
-            setTimeout(function () { window.location.href = '/logout.php'; }, 50);
+            setTimeout(function () { window.location.href = '<?= APP_BASE_PATH ?>/logout.php'; }, 50);
         });
     })();
 </script>

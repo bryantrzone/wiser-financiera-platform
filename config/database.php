@@ -14,8 +14,12 @@ class Database
     {
         $this->conn = null;
         try {
-            $socket = '/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock';
-            $dsn = "mysql:host={$this->host};dbname={$this->db_name};charset={$this->charset};unix_socket={$socket}";
+            $dsn = "mysql:host={$this->host};dbname={$this->db_name};charset={$this->charset}";
+            // Socket de XAMPP solo en macOS local; en producción (Linux/Hostinger) se conecta por host.
+            $socketLocal = '/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock';
+            if (PHP_OS === 'Darwin' && file_exists($socketLocal)) {
+                $dsn .= ";unix_socket={$socketLocal}";
+            }
             $opts = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

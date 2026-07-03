@@ -67,7 +67,7 @@ $cotizaciones = $stmt->fetchAll();
                     <?= $buscar ? "para \"{$buscar}\"" : 'registradas' ?>
                 </p>
             </div>
-            <a href="/index.php" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white
+            <a href="<?= APP_BASE_PATH ?>/index.php" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white
                       bg-blue-900 hover:bg-blue-800 rounded-lg transition-colors">
                 <i data-lucide="file-plus-2" class="w-4 h-4"></i>
                 Nueva Cotización
@@ -163,17 +163,17 @@ $cotizaciones = $stmt->fetchAll();
                                 </td>
                                 <td class="px-5 py-3 text-center">
                                     <div class="flex items-center justify-center gap-1">
-                                        <a href="/ver_cotizacion.php?id=<?= $c['id'] ?>"
+                                        <a href="<?= APP_BASE_PATH ?>/ver_cotizacion.php?id=<?= $c['id'] ?>"
                                             title="Ver detalle"
                                             class="p-1.5 text-gray-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors">
                                             <i data-lucide="eye" class="w-4 h-4"></i>
                                         </a>
-                                        <a href="/api/cotizaciones/exportar_pdf.php?id=<?= $c['id'] ?>"
+                                        <a href="<?= APP_BASE_PATH ?>/api/cotizaciones/exportar_pdf.php?id=<?= $c['id'] ?>"
                                             title="Descargar PDF" target="_blank"
                                             class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
                                             <i data-lucide="file-down" class="w-4 h-4"></i>
                                         </a>
-                                        <a href="/api/cotizaciones/exportar_excel.php?id=<?= $c['id'] ?>"
+                                        <a href="<?= APP_BASE_PATH ?>/api/cotizaciones/exportar_excel.php?id=<?= $c['id'] ?>"
                                             title="Descargar Excel"
                                             class="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded transition-colors">
                                             <i data-lucide="sheet" class="w-4 h-4"></i>

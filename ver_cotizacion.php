@@ -130,7 +130,7 @@ $tasaPct = round((float) $cot['tasa_anual'] * 100, 0);
         <!-- Barra de acciones -->
         <div class="mb-5 flex items-center justify-between flex-wrap gap-3">
             <div class="flex items-center gap-3">
-                <a href="/cotizaciones.php" class="text-gray-400 hover:text-gray-600">
+                <a href="<?= APP_BASE_PATH ?>/cotizaciones.php" class="text-gray-400 hover:text-gray-600">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 </a>
                 <div>
@@ -146,18 +146,18 @@ $tasaPct = round((float) $cot['tasa_anual'] * 100, 0);
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <a href="/api/cotizaciones/exportar_pdf.php?id=<?= $id ?>"
+                <a href="<?= APP_BASE_PATH ?>/api/cotizaciones/exportar_pdf.php?id=<?= $id ?>"
                     target="_blank" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700
                           bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
                     <i data-lucide="file-down" class="w-4 h-4"></i>
                     Exportar PDF
                 </a>
-                <a href="/api/cotizaciones/exportar_excel.php?id=<?= $id ?>" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-700
+                <a href="<?= APP_BASE_PATH ?>/api/cotizaciones/exportar_excel.php?id=<?= $id ?>" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-700
                           bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
                     <i data-lucide="sheet" class="w-4 h-4"></i>
                     Exportar Excel
                 </a>
-                <a href="/index.php" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white
+                <a href="<?= APP_BASE_PATH ?>/index.php" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white
                           bg-blue-900 hover:bg-blue-800 rounded-lg transition-colors">
                     <i data-lucide="file-plus-2" class="w-4 h-4"></i>
                     Nueva Cotización

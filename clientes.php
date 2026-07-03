@@ -150,7 +150,7 @@ $clientes = $stmt->fetchAll();
                                     <?= htmlspecialchars($cl['telefono'] ?? '—') ?>
                                 </td>
                                 <td class="px-5 py-3 text-right">
-                                    <a href="/index.php?cliente_id=<?= $cl['id'] ?>" class="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900
+                                    <a href="<?= APP_BASE_PATH ?>/index.php?cliente_id=<?= $cl['id'] ?>" class="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900
                                               font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors">
                                         <i data-lucide="file-plus-2" class="w-3.5 h-3.5"></i>
                                         Cotizar

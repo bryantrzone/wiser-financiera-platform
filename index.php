@@ -134,7 +134,7 @@ $productos = $conn->query("SELECT id, nombre, comision_apertura FROM productos W
                 <h1 class="text-2xl font-bold text-gray-900">Nueva Cotización</h1>
                 <p class="text-gray-400 text-sm mt-0.5">Ingresa los datos y la tabla se generará automáticamente</p>
             </div>
-            <a href="/cotizaciones.php" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600
+            <a href="<?= APP_BASE_PATH ?>/cotizaciones.php" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600
                       bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                 <i data-lucide="list" class="w-4 h-4"></i>
                 Ver cotizaciones
@@ -170,7 +170,7 @@ $productos = $conn->query("SELECT id, nombre, comision_apertura FROM productos W
                                             </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <a href="/clientes.php" title="Gestionar clientes"
+                                <a href="<?= APP_BASE_PATH ?>/clientes.php" title="Gestionar clientes"
                                     class="p-2 border border-gray-200 rounded-lg text-gray-400
                                           hover:text-blue-600 hover:border-blue-300 transition-colors">
                                     <i data-lucide="user-plus" class="w-4 h-4"></i>
@@ -383,7 +383,7 @@ $productos = $conn->query("SELECT id, nombre, comision_apertura FROM productos W
 
     <script>
         (function () {
-            const BASE = '/wiser-financiera-project-com';
+            const BASE = '<?= APP_BASE_PATH ?>';
             const fields = ['monto_credito', 'plazo_meses', 'fecha_inicio', 'tasa_anual_pct'];
             let debounceTimer = null;
             let lastData = null;

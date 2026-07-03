@@ -9,6 +9,8 @@ const Usuarios = (() => {
     let totalPaginas = 1;
     let usuarioAEliminar = null;
     const POR_PAGINA = 15;
+    // Base path de la app (p.ej. '/wiser-financiera-project-com' en local, '' en producción)
+    const BASE = window.APP_BASE_PATH || '';
 
     // ── Cargar y renderizar usuarios ────────────────────────
     async function cargarUsuarios() {
@@ -34,7 +36,7 @@ const Usuarios = (() => {
             </td></tr>`;
 
         try {
-            const res  = await fetch('/api/usuarios/listar.php?' + params);
+            const res  = await fetch(BASE + '/api/usuarios/listar.php?' + params);
             const data = await res.json();
 
             if (data.status !== 'success') throw new Error(data.message);
@@ -177,7 +179,7 @@ const Usuarios = (() => {
 
     async function abrirModalEditar(id) {
         try {
-            const res  = await fetch(`/api/usuarios/obtener.php?id=${id}`);
+            const res  = await fetch(`${BASE}/api/usuarios/obtener.php?id=${id}`);
             const data = await res.json();
             if (data.status === 'success') {
                 abrirModal('Editar usuario', data.data);
@@ -229,8 +231,8 @@ const Usuarios = (() => {
 
         try {
             const url    = esEditar
-                ? '/api/usuarios/actualizar.php'
-                : '/api/usuarios/crear.php';
+                ? BASE + '/api/usuarios/actualizar.php'
+                : BASE + '/api/usuarios/crear.php';
             const res    = await fetch(url, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -258,7 +260,7 @@ const Usuarios = (() => {
     async function toggleActivo(id, activoActual) {
         const nuevoEstado = activoActual == 1 ? 0 : 1;
         try {
-            const res  = await fetch('/api/usuarios/actualizar.php', {
+            const res  = await fetch(BASE + '/api/usuarios/actualizar.php', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({ id, active: nuevoEstado }),
@@ -284,7 +286,7 @@ const Usuarios = (() => {
     async function eliminarUsuario() {
         if (!usuarioAEliminar) return;
         try {
-            const res  = await fetch('/api/usuarios/eliminar.php', {
+            const res  = await fetch(BASE + '/api/usuarios/eliminar.php', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify({ id: usuarioAEliminar }),

@@ -3,7 +3,7 @@ require_once 'includes/auth.php';
 require_once 'config/constants.php';
 
 if (isLoggedIn()) {
-    header('Location: /index.php');
+    header('Location: ' . APP_BASE_PATH . '/index.php');
     exit;
 }
 
@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user = authenticateUser($email, $password);
                 if ($user) {
                     createUserSession($user);
-                    header('Location: /index.php');
+                    header('Location: ' . APP_BASE_PATH . '/index.php');
                     exit;
                 } else {
                     $error = 'Correo o contraseña incorrectos.';
@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Logo -->
         <div class="text-center mb-8 fade-up">
-            <img src="/assets/img/logo-website-transparente.png" alt="<?= APP_NAME ?>"
+            <img src="<?= APP_BASE_PATH ?>/assets/img/logo-website-transparente.png" alt="<?= APP_NAME ?>"
                 class="h-20 w-auto object-contain mx-auto">
         </div>
 
@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">Correo
                             electrónico</label>
                         <input type="email" id="email" name="email" required autocomplete="email"
-                            value="admin@wiserfinanciera.mx" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm
+                            class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm
                                       focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent
                                       transition-all placeholder-gray-400" placeholder="nombre@empresa.com">
                     </div>
@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">Contraseña</label>
                         <div class="relative">
-                            <input type="password" id="password" name="password" value="Admin2025!" required
+                            <input type="password" id="password" name="password" required
                                 autocomplete="current-password" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm pr-10
                                           focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent
                                           transition-all placeholder-gray-400" placeholder="Tu contraseña">

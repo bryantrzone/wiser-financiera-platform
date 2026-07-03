@@ -11,7 +11,7 @@
             extend: {
                 colors: {
                     primary: '#2a4367',
-                    accent: '#102405',
+                    accent: '#4A90E2',
                     'accent-dark': '#2563eb',
                     'accent-light': '#eff6ff',
                 },
@@ -32,4 +32,4 @@
 
 <!-- CSS de la aplicación -->
 <link rel="stylesheet"
-    href="/assets/css/app.css?v=<?= filemtime(__DIR__ . '/../assets/css/app.css') ?>">
+    href="<?= APP_BASE_PATH ?>/assets/css/app.css?v=<?= filemtime(__DIR__ . '/../assets/css/app.css') ?>">

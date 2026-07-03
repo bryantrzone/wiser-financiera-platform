@@ -93,7 +93,7 @@ function destroyUserSession(): void
 function requireLogin(): void
 {
     if (!isLoggedIn()) {
-        header('Location: /login.php');
+        header('Location: ' . APP_BASE_PATH . '/login.php');
         exit;
     }
 }

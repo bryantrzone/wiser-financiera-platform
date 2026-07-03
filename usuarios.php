@@ -213,7 +213,8 @@ $currentPage = 'usuarios';
         </div>
     </div>
 
-    <script src="/assets/js/usuarios.js?v=<?= time() ?>"></script>
+    <script>window.APP_BASE_PATH = '<?= APP_BASE_PATH ?>';</script>
+    <script src="<?= APP_BASE_PATH ?>/assets/js/usuarios.js?v=<?= time() ?>"></script>
     <script>lucide.createIcons();</script>
 </body>
 

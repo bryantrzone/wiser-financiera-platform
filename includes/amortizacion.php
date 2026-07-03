@@ -4,12 +4,19 @@ class CalculadoraAmortizacion
 {
     private const IVA = 0.16;
 
-    public static function calcularPMT(float $tasa_mensual, int $plazo, float $monto): float
+    /**
+     * Pago fijo (sistema francés). Si se pasa $tasa_iva, el IVA sobre el interés
+     * queda incorporado dentro del pago usando la tasa efectiva tasa_mensual*(1+IVA),
+     * de modo que el pago integrado (capital + interés + IVA) es constante en todos
+     * los periodos.
+     */
+    public static function calcularPMT(float $tasa_mensual, int $plazo, float $monto, float $tasa_iva = 0.0): float
     {
-        if ($tasa_mensual == 0) {
+        $tasa_efectiva = $tasa_mensual * (1 + $tasa_iva);
+        if ($tasa_efectiva == 0) {
             return round($monto / $plazo, 6);
         }
-        $pmt = $monto * $tasa_mensual / (1 - pow(1 + $tasa_mensual, -$plazo));
+        $pmt = $monto * $tasa_efectiva / (1 - pow(1 + $tasa_efectiva, -$plazo));
         return round($pmt, 6);
     }
 
@@ -24,16 +31,17 @@ class CalculadoraAmortizacion
 
         $tasa_mensual = $tasa_anual / 12;
 
-        // La comisión se deduce del saldo: el cliente recibe monto - comisión pero debe el monto completo
-        $comision_monto   = $comision_pct > 0
+        // La comisión de apertura se cobra por separado: la amortización corre
+        // sobre el monto completo del crédito (igual que el Excel: PMT(...,-monto)).
+        $comision_monto = $comision_pct > 0
             ? round($monto * $comision_pct, 6)
             : 0;
-        $monto_financiado = $monto - $comision_monto;
 
-        $pago_mensual = self::calcularPMT($tasa_mensual, $plazo, $monto_financiado);
+        // Pago fijo con IVA incorporado (constante en todos los periodos).
+        $pago_mensual = self::calcularPMT($tasa_mensual, $plazo, $monto, $tasa_iva);
 
         $periodos                 = [];
-        $saldo                    = $monto_financiado;
+        $saldo                    = $monto;
         $pago_anticipado_anterior = 0;
 
         for ($i = 1; $i <= $plazo; $i++) {
@@ -49,12 +57,15 @@ class CalculadoraAmortizacion
             $interes_ordinario = round($saldo * $tasa_mensual, 6);
             $iva_interes       = round($interes_ordinario * $tasa_iva, 6);
 
-            $es_ultimo = $saldo + $interes_ordinario <= $pago_mensual + 0.01;
+            // Último periodo: el capital liquida el saldo restante (absorbe el redondeo).
+            $es_ultimo = ($i === $plazo)
+                || ($saldo + $interes_ordinario + $iva_interes <= $pago_mensual + 0.01);
 
             if ($es_ultimo) {
                 $pago_capital = round($saldo, 6);
             } else {
-                $pago_capital = round($pago_mensual - $interes_ordinario, 6);
+                // capital = pago fijo − interés − IVA  → pago integrado constante
+                $pago_capital = round($pago_mensual - $interes_ordinario - $iva_interes, 6);
             }
 
             $pago_calculado  = round($pago_capital + $interes_ordinario + $iva_interes, 6);

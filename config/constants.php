@@ -1,4 +1,11 @@
 <?php
+// Base path dinámico: '' en producción (raíz), '/wiser-financiera-project-com' en desarrollo local
+define('APP_BASE_PATH', rtrim(str_replace(
+    rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/'),
+    '',
+    dirname(__DIR__)
+), '/'));
+
 // Aplicación
 define('APP_NAME',    'Wiser Financiera');
 define('APP_VERSION', '1.0.0');

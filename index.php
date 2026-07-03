@@ -610,6 +610,12 @@ $productos = $conn->query("SELECT id, nombre, comision_apertura FROM productos W
                     $('cliente_id').focus();
                     return;
                 }
+                const productoId = $('producto_id').value;
+                if (!productoId) {
+                    alert('Por favor selecciona un producto antes de guardar.');
+                    $('producto_id').focus();
+                    return;
+                }
 
                 const data = { ...getFormData(), cliente_id: clienteId };
 

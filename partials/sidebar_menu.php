@@ -32,7 +32,7 @@ function navSubClasses(bool $activo): string
 
         <!-- Logo del encabezado -->
         <div class="flex items-center justify-between p-4 border-b brand-sidebar-section">
-            <img src="/assets/img/logo-wiser-website.svg" alt="<?= APP_NAME ?>"
+            <img src="<?= APP_BASE_PATH ?>/assets/img/logo-wiser-website.svg" alt="<?= APP_NAME ?>"
                 class="brand-logo h-8 w-auto"
                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
             <span class="brand-logo-fallback hidden items-center font-bold text-accent text-lg">WF</span>

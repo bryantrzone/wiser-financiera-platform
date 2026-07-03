@@ -50,15 +50,20 @@ try {
     $comision_monto   = $comision_pct > 0 ? round($monto * $comision_pct, 2) : 0;
     $monto_financiado = $monto - $comision_monto - $gastos_contrato;
 
+    $aplicar_iva = isset($data['aplicar_iva']) ? (int) $data['aplicar_iva'] : 1;
+    $iva_rate    = $aplicar_iva === 0 ? 0.0 : IVA;
+
+    // PMT sobre el monto completo; la comisión se cobra por separado.
     $params = [
-        'monto_credito'         => $monto_financiado,
+        'monto_credito'         => $monto,
         'plazo_meses'           => $plazo,
         'fecha_inicio'          => $fecha,
         'tasa_anual'            => $tasa_anual_dec,
         'comision_apertura_pct' => 0,
+        'aplicar_iva'           => $aplicar_iva,
     ];
 
-    $pago_mensual = CalculadoraAmortizacion::calcularPMT($tasa_mensual_dec, $plazo, $monto_financiado);
+    $pago_mensual = CalculadoraAmortizacion::calcularPMT($tasa_mensual_dec, $plazo, $monto, $iva_rate);
     $periodos     = CalculadoraAmortizacion::generarPeriodos($params);
     $totales      = CalculadoraAmortizacion::calcularTotales($periodos);
 

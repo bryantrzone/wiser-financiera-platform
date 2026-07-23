@@ -170,11 +170,11 @@ $productos = $conn->query("SELECT id, nombre, comision_apertura FROM productos W
                                             </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <a href="<?= APP_BASE_PATH ?>/clientes.php" title="Gestionar clientes"
+                                <button type="button" id="btn-nuevo-cliente" title="Nuevo cliente"
                                     class="p-2 border border-gray-200 rounded-lg text-gray-400
                                           hover:text-blue-600 hover:border-blue-300 transition-colors">
                                     <i data-lucide="user-plus" class="w-4 h-4"></i>
-                                </a>
+                                </button>
                             </div>
                         </div>
 
@@ -381,6 +381,76 @@ $productos = $conn->query("SELECT id, nombre, comision_apertura FROM productos W
         </div>
     </main>
 
+    <!-- Modal nuevo cliente (no recarga la página para no perder la cotización) -->
+    <div id="modal-cliente" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-lg font-bold text-gray-900">Nuevo Cliente</h3>
+                <button type="button" id="cliente-cerrar" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="cliente-error" class="hidden bg-red-50 border border-red-200 rounded-lg p-2.5 text-xs text-red-600 mb-4"></div>
+            <form id="form-cliente" class="space-y-4" novalidate>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tipo de Cliente</label>
+                    <select id="cli_tipo_cliente" name="tipo_cliente"
+                        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="interno">Cliente Interno</option>
+                        <option value="externo">Cliente Externo</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">
+                        Nombre <span class="text-red-400">*</span>
+                    </label>
+                    <input type="text" id="cli_nombre" name="nombre" required
+                        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre completo">
+                </div>
+                <div id="cli_empresa_wrap" class="hidden">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Empresa</label>
+                    <input type="text" id="cli_empresa" name="empresa"
+                        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Razón social">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">RFC</label>
+                        <input type="text" id="cli_rfc" name="rfc" maxlength="20"
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="RFC">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Teléfono</label>
+                        <input type="tel" id="cli_telefono" name="telefono"
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="10 dígitos">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Email</label>
+                    <input type="email" id="cli_email" name="email"
+                        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="correo@empresa.com">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" id="cliente-cancelar"
+                        class="flex-1 border border-gray-200 text-gray-600 font-medium py-2 rounded-lg
+                               text-sm hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="cliente-guardar"
+                        class="flex-1 bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2
+                               rounded-lg text-sm transition-colors">
+                        Guardar Cliente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         (function () {
             const BASE = '<?= APP_BASE_PATH ?>';
@@ -482,7 +552,8 @@ $productos = $conn->query("SELECT id, nombre, comision_apertura FROM productos W
 
                 // Tabla de periodos
                 const tbody = $('tabla-periodos');
-                tbody.innerHTML = json.periodos.map(p =>
+                const sum = key => json.periodos.reduce((a, p) => a + (parseFloat(p[key]) || 0), 0);
+                const filas = json.periodos.map(p =>
                     `<tr>
                 <td class="text-center">${p.periodo}</td>
                 <td class="text-center">${fmtDate(p.fecha_vencimiento)}</td>
@@ -494,6 +565,18 @@ $productos = $conn->query("SELECT id, nombre, comision_apertura FROM productos W
                 <td class="num">${fmtMXN(p.pago_integrado)}</td>
             </tr>`
                 ).join('');
+
+                const filaTotales =
+                    `<tr style="background:#dbeafe; font-weight:700;">
+                <td colspan="3" class="px-3 py-2 text-center text-sm">TOTALES</td>
+                <td class="num">—</td>
+                <td class="num">${fmtMXN(sum('pago_capital'))}</td>
+                <td class="num">${fmtMXN(sum('interes_ordinario'))}</td>
+                <td class="num">${fmtMXN(sum('iva_interes'))}</td>
+                <td class="num text-blue-900">${fmtMXN(sum('pago_integrado'))}</td>
+            </tr>`;
+
+                tbody.innerHTML = filas + filaTotales;
 
                 $('preview-section').style.display = 'block';
             }
@@ -638,6 +721,88 @@ $productos = $conn->query("SELECT id, nombre, comision_apertura FROM productos W
                     $('btn-guardar').disabled = false;
                     $('btn-guardar').innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Guardar Cotización';
                     lucide.createIcons();
+                }
+            });
+
+            // ── Modal Nuevo Cliente (sin recargar, conserva la cotización) ──
+            const modalCliente = $('modal-cliente');
+            const cliError     = $('cliente-error');
+
+            // Empresa solo aplica a Cliente Externo
+            function toggleEmpresaCliente() {
+                const esExterno = $('cli_tipo_cliente').value === 'externo';
+                $('cli_empresa_wrap').classList.toggle('hidden', !esExterno);
+                if (!esExterno) $('cli_empresa').value = '';
+            }
+
+            function abrirModalCliente() {
+                cliError.classList.add('hidden');
+                $('form-cliente').reset();
+                toggleEmpresaCliente();
+                modalCliente.classList.remove('hidden');
+                setTimeout(() => $('cli_nombre').focus(), 50);
+            }
+            function cerrarModalCliente() {
+                modalCliente.classList.add('hidden');
+            }
+
+            $('btn-nuevo-cliente')?.addEventListener('click', abrirModalCliente);
+            $('cli_tipo_cliente')?.addEventListener('change', toggleEmpresaCliente);
+            $('cliente-cerrar')?.addEventListener('click', cerrarModalCliente);
+            $('cliente-cancelar')?.addEventListener('click', cerrarModalCliente);
+            modalCliente?.addEventListener('click', (e) => {
+                if (e.target === modalCliente) cerrarModalCliente();
+            });
+
+            $('form-cliente')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                cliError.classList.add('hidden');
+
+                const nombre = $('cli_nombre').value.trim();
+                if (!nombre) {
+                    cliError.textContent = 'El nombre es requerido.';
+                    cliError.classList.remove('hidden');
+                    $('cli_nombre').focus();
+                    return;
+                }
+
+                const payload = {
+                    nombre,
+                    empresa:      $('cli_empresa').value.trim(),
+                    rfc:          $('cli_rfc').value.trim(),
+                    email:        $('cli_email').value.trim(),
+                    telefono:     $('cli_telefono').value.trim(),
+                    tipo_cliente: $('cli_tipo_cliente').value,
+                };
+
+                const btn = $('cliente-guardar');
+                btn.disabled  = true;
+                btn.innerHTML = '<span class="spinner" style="width:16px;height:16px"></span>';
+
+                try {
+                    const resp = await fetch(BASE + '/api/clientes/crear.php', {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body:    JSON.stringify(payload),
+                    });
+                    const json = await resp.json();
+                    if (json.status !== 'success') throw new Error(json.message);
+
+                    // Insertar y seleccionar el nuevo cliente en el <select> de la cotización
+                    const sel  = $('cliente_id');
+                    const opt  = document.createElement('option');
+                    opt.value       = json.data.id;
+                    opt.textContent = json.data.nombre + (json.data.empresa ? ' — ' + json.data.empresa : '');
+                    sel.appendChild(opt);
+                    sel.value = json.data.id;
+
+                    cerrarModalCliente();
+                } catch (err) {
+                    cliError.textContent = 'Error al crear cliente: ' + (err.message || 'Error desconocido');
+                    cliError.classList.remove('hidden');
+                } finally {
+                    btn.disabled  = false;
+                    btn.innerHTML = 'Guardar Cliente';
                 }
             });
 

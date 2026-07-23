@@ -51,7 +51,10 @@ class CalculadoraAmortizacion
             $dias_totales = $i * 30;
             $fecha_corte->modify("+{$dias_totales} days");
 
-            $fecha_vencimiento = (clone $fecha_corte)->modify('+10 days');
+            // La fecha de pago cae el mismo día del mes que la fecha de inicio
+            // (inicio 23 → pagos el 23 de cada mes), ajustando al último día
+            // disponible cuando el mes destino no tiene ese día (ej. 31 → 28/feb).
+            $fecha_vencimiento = self::sumarMeses($fecha_inicio, $i);
             $fecha_inicio_mes  = (clone $fecha_corte)->modify('first day of this month');
 
             $interes_ordinario = round($saldo * $tasa_mensual, 6);
@@ -97,6 +100,24 @@ class CalculadoraAmortizacion
         }
 
         return $periodos;
+    }
+
+    /**
+     * Suma $meses meses a $base conservando el día del mes. Si el mes destino no
+     * tiene ese día (ej. 31 en febrero), ajusta al último día de ese mes. Evita el
+     * desbordamiento nativo de PHP (31/ene +1 mes = 03/mar).
+     */
+    private static function sumarMeses(DateTime $base, int $meses): DateTime
+    {
+        $dia       = (int) $base->format('d');
+        $resultado = (clone $base)->modify('first day of this month')->modify("+{$meses} months");
+        $dias_mes  = (int) $resultado->format('t');
+        $resultado->setDate(
+            (int) $resultado->format('Y'),
+            (int) $resultado->format('n'),
+            min($dia, $dias_mes)
+        );
+        return $resultado;
     }
 
     public static function calcularTotales(array $periodos): array

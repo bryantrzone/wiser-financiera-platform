@@ -82,7 +82,7 @@ if ($gastosContrato > 0) {
     $infoRows[] = ['Gastos por Contrato:', $gastosContrato, '', 'Monto Financiado:', $montoFinanciado];
 }
 
-$sheet->mergeCells('A1:K1');
+$sheet->mergeCells('A1:J1');
 $sheet->setCellValue('A1', 'Tabla de Amortización — ' . $cot['credito_no']);
 $sheet->getStyle('A1')->applyFromArray([
     'font' => ['bold' => true, 'size' => 14, 'color' => ['rgb' => '1E3A8A']],
@@ -115,10 +115,10 @@ $row++;
 
 // Encabezados de tabla
 $headers = [
-    'A' => '#', 'B' => 'Periodo', 'C' => 'F. Vencimiento', 'D' => 'F. Corte',
-    'E' => 'Días', 'F' => 'Saldo Insoluto', 'G' => 'Pago Capital',
-    'H' => 'Interés Ordinario', 'I' => 'IVA Interés',
-    'J' => 'Pago Calculado', 'K' => 'Pago Integrado',
+    'A' => '#', 'B' => 'Periodo', 'C' => 'F. Vencimiento',
+    'D' => 'Días', 'E' => 'Saldo Insoluto', 'F' => 'Pago Capital',
+    'G' => 'Interés Ordinario', 'H' => 'IVA Interés',
+    'I' => 'Pago Calculado', 'J' => 'Pago Integrado',
 ];
 
 $headerStyle = [
@@ -132,12 +132,12 @@ $headerRow = $row;
 foreach ($headers as $col => $label) {
     $sheet->setCellValue($col . $row, $label);
 }
-$sheet->getStyle('A' . $row . ':K' . $row)->applyFromArray($headerStyle);
+$sheet->getStyle('A' . $row . ':J' . $row)->applyFromArray($headerStyle);
 $sheet->getRowDimension($row)->setRowHeight(18);
 $row++;
 
 $moneyFmt = '"$"#,##0.00';
-$moneyCols = ['F', 'G', 'H', 'I', 'J', 'K'];
+$moneyCols = ['E', 'F', 'G', 'H', 'I', 'J'];
 $fillOn  = ['fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EFF6FF']]];
 $fillOff = ['fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFFFFF']]];
 
@@ -145,22 +145,21 @@ foreach ($periodos as $idx => $p) {
     $sheet->setCellValue('A' . $row, $idx + 1);
     $sheet->setCellValue('B' . $row, $p['periodo']);
     $sheet->setCellValue('C' . $row, CalculadoraAmortizacion::formatearFechaMx($p['fecha_vencimiento']));
-    $sheet->setCellValue('D' . $row, CalculadoraAmortizacion::formatearFechaMx($p['fecha_corte']));
-    $sheet->setCellValue('E' . $row, $p['dias']);
-    $sheet->setCellValue('F' . $row, (float)$p['saldo_insoluto']);
-    $sheet->setCellValue('G' . $row, (float)$p['pago_capital']);
-    $sheet->setCellValue('H' . $row, (float)$p['interes_ordinario']);
-    $sheet->setCellValue('I' . $row, (float)$p['iva_interes']);
-    $sheet->setCellValue('J' . $row, (float)$p['pago_calculado']);
-    $sheet->setCellValue('K' . $row, (float)$p['pago_integrado']);
+    $sheet->setCellValue('D' . $row, $p['dias']);
+    $sheet->setCellValue('E' . $row, (float)$p['saldo_insoluto']);
+    $sheet->setCellValue('F' . $row, (float)$p['pago_capital']);
+    $sheet->setCellValue('G' . $row, (float)$p['interes_ordinario']);
+    $sheet->setCellValue('H' . $row, (float)$p['iva_interes']);
+    $sheet->setCellValue('I' . $row, (float)$p['pago_calculado']);
+    $sheet->setCellValue('J' . $row, (float)$p['pago_integrado']);
 
     $fillStyle = ($idx % 2 === 0) ? $fillOff : $fillOn;
-    $sheet->getStyle('A' . $row . ':K' . $row)->applyFromArray($fillStyle);
+    $sheet->getStyle('A' . $row . ':J' . $row)->applyFromArray($fillStyle);
 
     foreach ($moneyCols as $mc) {
         $sheet->getStyle($mc . $row)->getNumberFormat()->setFormatCode($moneyFmt);
     }
-    $sheet->getStyle('A' . $row . ':K' . $row)->getBorders()->getAllBorders()
+    $sheet->getStyle('A' . $row . ':J' . $row)->getBorders()->getAllBorders()
           ->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('DDDDDD');
     $row++;
 }
@@ -172,20 +171,20 @@ $totStyle = [
     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '1E3A8A']]],
 ];
 $sheet->setCellValue('A' . $row, 'TOTAL');
-$sheet->mergeCells('A' . $row . ':E' . $row);
-$sheet->setCellValue('F' . $row, '');
-$sheet->setCellValue('G' . $row, array_sum(array_column($periodos, 'pago_capital')));
-$sheet->setCellValue('H' . $row, array_sum(array_column($periodos, 'interes_ordinario')));
-$sheet->setCellValue('I' . $row, array_sum(array_column($periodos, 'iva_interes')));
-$sheet->setCellValue('J' . $row, array_sum(array_column($periodos, 'pago_calculado')));
-$sheet->setCellValue('K' . $row, array_sum(array_column($periodos, 'pago_integrado')));
-$sheet->getStyle('A' . $row . ':K' . $row)->applyFromArray($totStyle);
+$sheet->mergeCells('A' . $row . ':D' . $row);
+$sheet->setCellValue('E' . $row, '');
+$sheet->setCellValue('F' . $row, array_sum(array_column($periodos, 'pago_capital')));
+$sheet->setCellValue('G' . $row, array_sum(array_column($periodos, 'interes_ordinario')));
+$sheet->setCellValue('H' . $row, array_sum(array_column($periodos, 'iva_interes')));
+$sheet->setCellValue('I' . $row, array_sum(array_column($periodos, 'pago_calculado')));
+$sheet->setCellValue('J' . $row, array_sum(array_column($periodos, 'pago_integrado')));
+$sheet->getStyle('A' . $row . ':J' . $row)->applyFromArray($totStyle);
 foreach ($moneyCols as $mc) {
     $sheet->getStyle($mc . $row)->getNumberFormat()->setFormatCode($moneyFmt);
 }
 
 // Anchos de columna
-$widths = ['A'=>6,'B'=>10,'C'=>18,'D'=>16,'E'=>7,'F'=>18,'G'=>16,'H'=>20,'I'=>14,'J'=>16,'K'=>16];
+$widths = ['A'=>6,'B'=>10,'C'=>18,'D'=>7,'E'=>18,'F'=>16,'G'=>20,'H'=>14,'I'=>16,'J'=>16];
 foreach ($widths as $c => $w) {
     $sheet->getColumnDimension($c)->setWidth($w);
 }

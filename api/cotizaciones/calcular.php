@@ -81,9 +81,10 @@ try {
     $periodos     = CalculadoraAmortizacion::generarPeriodos($params);
     $totales      = CalculadoraAmortizacion::calcularTotales($periodos);
 
+    // La fecha límite es el vencimiento del último pago (mismo día del mes).
     $fecha_dt        = new DateTime($fecha);
-    $fecha_limite_dt = clone $fecha_dt;
-    $fecha_limite_dt->modify('+' . ($plazo * 30) . ' days');
+    $ultimo_periodo  = end($periodos);
+    $fecha_limite_dt = new DateTime($ultimo_periodo['fecha_vencimiento']);
 
     $cabecera = [
         'plazo_dias'        => $plazo * 30,

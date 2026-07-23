@@ -24,6 +24,7 @@ $conn = obtenerConexionBaseDatos();
 
 $stmt = $conn->prepare("
     SELECT c.*, cl.nombre AS cliente_nombre, cl.empresa, cl.rfc, cl.email AS cliente_email, cl.telefono,
+           cl.tipo_cliente,
            COALESCE(t.descripcion, 'Tasa manual') AS tasa_desc,
            COALESCE(t.tasa_anual, c.tasa_anual_custom) AS tasa_anual,
            p.nombre AS producto_nombre
@@ -222,6 +223,10 @@ $tasaPct = round((float) $cot['tasa_anual'] * 100, 0);
                     <div class="info-item">
                         <span class="info-label">Moneda:</span>
                         <span class="info-val"><?= htmlspecialchars($cot['moneda']) ?></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tipo de Cliente:</span>
+                        <span class="info-val"><?= ($cot['tipo_cliente'] ?? 'interno') === 'externo' ? 'Cliente Externo' : 'Cliente Interno' ?></span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Tasa Interés:</span>

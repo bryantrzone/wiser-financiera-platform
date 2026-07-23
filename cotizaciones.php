@@ -30,7 +30,7 @@ $where = $buscar ? "AND (cl.nombre LIKE :q OR cl.empresa LIKE :q OR c.credito_no
 $sql = "
     SELECT c.id, c.credito_no, c.fecha_inicio, c.monto_credito, c.plazo_meses,
            c.pago_mensual, c.total_a_pagar, c.created_at,
-           cl.nombre AS cliente_nombre, cl.empresa,
+           cl.nombre AS cliente_nombre, cl.empresa, cl.tipo_cliente,
            COALESCE(t.tasa_anual, c.tasa_anual_custom) AS tasa_anual,
            COALESCE(t.descripcion, 'Tasa manual') AS tasa_desc,
            p.nombre AS producto_nombre
@@ -141,6 +141,11 @@ $cotizaciones = $stmt->fetchAll();
                                     <?php if ($c['empresa']): ?>
                                         <p class="text-xs text-gray-400"><?= htmlspecialchars($c['empresa']) ?></p>
                                     <?php endif; ?>
+                                    <?php $esExterno = ($c['tipo_cliente'] ?? 'interno') === 'externo'; ?>
+                                    <span class="inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded
+                                                 <?= $esExterno ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700' ?>">
+                                        <?= $esExterno ? 'Externo' : 'Interno' ?>
+                                    </span>
                                 </td>
                                 <td class="px-5 py-3">
                                     <p class="text-gray-700"><?= htmlspecialchars($c['producto_nombre']) ?></p>

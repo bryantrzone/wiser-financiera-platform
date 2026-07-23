@@ -28,13 +28,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         if (!$nombre) {
             $err = 'El nombre es requerido.';
         } else {
-            $stmt = $conn->prepare("INSERT INTO clientes (nombre, empresa, rfc, email, telefono) VALUES (?,?,?,?,?)");
+            $tipo_cliente = ($_POST['tipo_cliente'] ?? 'interno') === 'externo' ? 'externo' : 'interno';
+            $stmt = $conn->prepare("INSERT INTO clientes (nombre, empresa, rfc, email, telefono, tipo_cliente) VALUES (?,?,?,?,?,?)");
             $stmt->execute([
                 sanitizarEntrada($nombre),
                 sanitizarEntrada($_POST['empresa'] ?? ''),
                 sanitizarEntrada($_POST['rfc'] ?? ''),
                 sanitizarEntrada($_POST['email'] ?? ''),
                 sanitizarEntrada($_POST['telefono'] ?? ''),
+                $tipo_cliente,
             ]);
             $msg = 'Cliente creado correctamente.';
         }
@@ -136,6 +138,11 @@ $clientes = $stmt->fetchAll();
                             <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                                 <td class="px-5 py-3 font-medium text-gray-900">
                                     <?= htmlspecialchars($cl['nombre']) ?>
+                                    <?php $esExterno = ($cl['tipo_cliente'] ?? 'interno') === 'externo'; ?>
+                                    <span class="inline-block ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded align-middle
+                                                 <?= $esExterno ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700' ?>">
+                                        <?= $esExterno ? 'Externo' : 'Interno' ?>
+                                    </span>
                                 </td>
                                 <td class="px-5 py-3 text-gray-600">
                                     <?= htmlspecialchars($cl['empresa'] ?? '—') ?>
@@ -187,15 +194,23 @@ $clientes = $stmt->fetchAll();
             <form method="POST" class="space-y-4">
                 <input type="hidden" name="accion" value="crear">
                 <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tipo de Cliente</label>
+                    <select id="tipo_cliente" name="tipo_cliente" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="interno">Cliente Interno</option>
+                        <option value="externo">Cliente Externo</option>
+                    </select>
+                </div>
+                <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">
                         Nombre <span class="text-red-400">*</span>
                     </label>
                     <input type="text" name="nombre" required class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
                                   focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre completo">
                 </div>
-                <div>
+                <div id="empresa-wrap" class="hidden">
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Empresa</label>
-                    <input type="text" name="empresa" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                    <input type="text" id="empresa" name="empresa" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
                                   focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Razón social">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -231,7 +246,23 @@ $clientes = $stmt->fetchAll();
         </div>
     </div>
 
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+
+        // Empresa solo aplica a Cliente Externo
+        (function () {
+            const tipo   = document.getElementById('tipo_cliente');
+            const wrap   = document.getElementById('empresa-wrap');
+            const inputE = document.getElementById('empresa');
+            function toggleEmpresa() {
+                const esExterno = tipo.value === 'externo';
+                wrap.classList.toggle('hidden', !esExterno);
+                if (!esExterno) inputE.value = '';
+            }
+            tipo?.addEventListener('change', toggleEmpresa);
+            toggleEmpresa();
+        })();
+    </script>
 </body>
 
 </html>

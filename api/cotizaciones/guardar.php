@@ -67,9 +67,8 @@ try {
     $periodos     = CalculadoraAmortizacion::generarPeriodos($params);
     $totales      = CalculadoraAmortizacion::calcularTotales($periodos);
 
-    $fecha_dt = new DateTime($fecha);
-    $fecha_dt->modify('+' . $plazo * 30 . ' days');
-    $fecha_limite = $fecha_dt->format('Y-m-d');
+    // La fecha límite es el vencimiento del último pago (mismo día del mes).
+    $fecha_limite = end($periodos)['fecha_vencimiento'];
 
     $conn->beginTransaction();
 
